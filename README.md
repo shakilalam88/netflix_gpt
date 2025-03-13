@@ -11,9 +11,15 @@ Currently, two official plugins are available:
 
 If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
-
-Install react
-install tailwind
+# What i did.
+- Install react with
+- Install tailwind
+- Install React-router-dom
+- create routing
+- create header
+- add login page background image
+- create Login Form
+- create signUp form
 
 #Features
 
