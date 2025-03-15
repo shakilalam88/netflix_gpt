@@ -1,12 +1,35 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Header from './Header'
+import CheckFormValidation from '../utils/CheckFormValidation'
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  const Name = useRef(null)
+  const Email = useRef(null)
+  const Password = useRef(null)
+
+  const handleButtonClick = (e) => {
+    e.preventDefault()
+
+    // form validation
+    const message = CheckFormValidation(
+      isSignInForm,
+      Name?.current?.value,
+      Email.current.value,
+      Password.current.value
+    )
+    setErrorMessage(message)
+
+    // sign in or sign up
+    if (message === 'Validation Passed') {
+      console.log('Validation Passed')
+    }
+  }
 
   const toggleSignInForm = () => {
     setIsSignInForm(!isSignInForm)
   }
-  console.log(isSignInForm)
   return (
     <div className="relative">
       <Header />
@@ -22,22 +45,31 @@ const Login = () => {
           <form action="">
             {!isSignInForm && (
               <input
+                ref={Name}
                 className="bg-[#333232] rounded-xs text-xs p-2 w-full mb-2"
                 type="text"
                 placeholder="Full name"
               />
             )}
             <input
+              ref={Email}
               className="bg-[#333232] rounded-xs text-xs p-2 w-full"
               type="text"
               placeholder="Email or phone number"
             />
             <input
+              ref={Password}
               className="bg-[#333232] rounded-xs text-xs p-2 w-full mt-2"
               type="password"
               placeholder="Password"
             />
-            <button className="bg-[#e7000b] rounded-xs text-xs p-2 w-full mt-4 cursor-pointer">
+            <p className="text-sm text-red-600 mt-2 font-bold">
+              {errorMessage}
+            </p>
+            <button
+              className="bg-[#e7000b] rounded-xs text-xs p-2 w-full mt-4 cursor-pointer"
+              onClick={handleButtonClick}
+            >
               {isSignInForm ? 'Sign IN' : 'Sign UP'}
             </button>
             <div className="flex items-center mt-2 gap-2">
