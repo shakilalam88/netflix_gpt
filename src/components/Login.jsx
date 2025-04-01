@@ -1,29 +1,82 @@
-import { useRef, useState } from 'react'
+import { useState, useRef } from 'react'
 import Header from './Header'
-import CheckFormValidation from '../utils/CheckFormValidation'
+import { CheckFormValidation } from '../utils/CheckFormValidation'
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth'
+import { auth } from '../utils/firebase'
+import { useDispatch } from 'react-redux'
+import { addUser } from '../utils/userSlice'
+
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
+  const dispatch = useDispatch()
 
-  const Name = useRef(null)
-  const Email = useRef(null)
-  const Password = useRef(null)
+  const name = useRef(null)
+  const email = useRef(null)
+  const password = useRef(null)
 
-  const handleButtonClick = (e) => {
-    e.preventDefault()
-
-    // form validation
+  const handleButtonClick = () => {
     const message = CheckFormValidation(
-      isSignInForm,
-      Name?.current?.value,
-      Email.current.value,
-      Password.current.value
+      email.current.value,
+      password.current.value
     )
     setErrorMessage(message)
+    if (message) return
 
-    // sign in or sign up
-    if (message === 'Validation Passed') {
-      console.log('Validation Passed')
+    if (!isSignInForm) {
+      // Sign Up Logic
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          const user = userCredential.user
+          updateProfile(user, {
+            displayName: name.current.value,
+            photoURL: 'https://avatars.githubusercontent.com/u/50899183?v=4',
+          })
+            .then(() => {
+              const { uid, email, displayName, photoURL } = auth.currentUser
+              dispatch(
+                addUser({
+                  uid: uid,
+                  email: email,
+                  displayName: displayName,
+                  photoURL: photoURL,
+                })
+              )
+            })
+            .catch((error) => {
+              setErrorMessage(error.message)
+            })
+        })
+        .catch((error) => {
+          const errorCode = error.code
+          const errorMessage = error.message
+          setErrorMessage(errorCode + '-' + errorMessage)
+        })
+    } else {
+      // Sign In Logic
+      signInWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user
+          console.log(user)
+        })
+        .catch((error) => {
+          const errorCode = error.code
+          const errorMessage = error.message
+          setErrorMessage(errorCode + '-' + errorMessage)
+        })
     }
   }
 
@@ -31,71 +84,59 @@ const Login = () => {
     setIsSignInForm(!isSignInForm)
   }
   return (
-    <div className="relative">
+    <div>
       <Header />
-      <>
-        <div className="absolute">
-          <img
-            src="https://assets.nflxext.com/ffe/siteui/vlv3/42a0bce6-fc59-4c1c-b335-7196a59ae9ab/web/IN-en-20250303-TRIFECTA-perspective_d5f81427-d6cf-412d-8e86-2315671b9be1_large.jpg"
-            alt="hero_image"
+      <div className="absolute">
+        <img
+          src="https://assets.nflxext.com/ffe/siteui/vlv3/fc164b4b-f085-44ee-bb7f-ec7df8539eff/d23a1608-7d90-4da1-93d6-bae2fe60a69b/IN-en-20230814-popsignuptwoweeks-perspective_alpha_website_large.jpg"
+          alt="logo"
+        />
+      </div>
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="w-3/12 absolute p-12 bg-black my-36 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80"
+      >
+        <h1 className="font-bold text-3xl py-4">
+          {isSignInForm ? 'Sign In' : 'Sign Up'}
+        </h1>
+
+        {!isSignInForm && (
+          <input
+            ref={name}
+            type="text"
+            placeholder="Full Name"
+            className="p-4 my-4 w-full bg-gray-700"
           />
-        </div>
-        <div className="absolute w-3/12 top-40 left-0 right-0 m-auto bg-[#000000c7] text-white p-5">
-          <h1 className="mb-4">{isSignInForm ? 'Sign IN' : 'Sign UP'}</h1>
-          <form action="">
-            {!isSignInForm && (
-              <input
-                ref={Name}
-                className="bg-[#333232] rounded-xs text-xs p-2 w-full mb-2"
-                type="text"
-                placeholder="Full name"
-              />
-            )}
-            <input
-              ref={Email}
-              className="bg-[#333232] rounded-xs text-xs p-2 w-full"
-              type="text"
-              placeholder="Email or phone number"
-            />
-            <input
-              ref={Password}
-              className="bg-[#333232] rounded-xs text-xs p-2 w-full mt-2"
-              type="password"
-              placeholder="Password"
-            />
-            <p className="text-sm text-red-600 mt-2 font-bold">
-              {errorMessage}
-            </p>
-            <button
-              className="bg-[#e7000b] rounded-xs text-xs p-2 w-full mt-4 cursor-pointer"
-              onClick={handleButtonClick}
-            >
-              {isSignInForm ? 'Sign IN' : 'Sign UP'}
-            </button>
-            <div className="flex items-center mt-2 gap-2">
-              <input
-                type="checkbox"
-                className="outline-0 border-0"
-              />
-              <span className="text-xs">Remember me</span>
-            </div>
-            <p
-              className="mt-16 text-xs cursor-pointer"
-              onClick={toggleSignInForm}
-            >
-              {isSignInForm
-                ? ' New to Netflix? Sign up now'
-                : ' Already Register. Sign in now'}
-            </p>
-            <p className="text-[9px] mt-2 mb-10">
-              This page is protected by Google reCAPTCHA to ensure you're not a
-              bot. <a href="">Learn more.</a>
-            </p>
-          </form>
-        </div>
-      </>
+        )}
+        <input
+          ref={email}
+          type="text"
+          placeholder="Email Address"
+          className="p-4 my-4 w-full bg-gray-700"
+        />
+        <input
+          ref={password}
+          type="password"
+          placeholder="Password"
+          className="p-4 my-4 w-full bg-gray-700"
+        />
+        <p className="text-red-500 font-bold text-lg py-2">{errorMessage}</p>
+        <button
+          className="p-4 my-6 bg-red-700 w-full rounded-lg"
+          onClick={handleButtonClick}
+        >
+          {isSignInForm ? 'Sign In' : 'Sign Up'}
+        </button>
+        <p
+          className="py-4 cursor-pointer"
+          onClick={toggleSignInForm}
+        >
+          {isSignInForm
+            ? 'New to Netflix? Sign Up Now'
+            : 'Already registered? Sign In Now.'}
+        </p>
+      </form>
     </div>
   )
 }
-
 export default Login

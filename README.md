@@ -33,7 +33,9 @@ If you are developing a production application, we recommend using TypeScript an
 - Firebase setup
 - Deploying our app to production in firebase
 - Create SignUp authentication in firebase
-
+- sign up validation with firebase
+- sign in validation with firebase
+- created redux store with userSlice
 
 #Features
 
